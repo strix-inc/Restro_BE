@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 from django.contrib.auth.hashers import make_password
 
+
 class SignupService:
     def __init__(self, restaurant_name: str, phone: str, password: str) -> None:
         self.restaurant_name = restaurant_name.strip()
@@ -19,7 +20,8 @@ class SignupService:
     def create_restaurant(self):
         restaurant = Restaurant(
             name=self.restaurant_name,
-            display_name=self.restaurant_name
+            display_name=self.restaurant_name,
+            contact=self.phone,
         )
         restaurant.save()
         return restaurant
@@ -33,3 +35,11 @@ class SignupService:
         user = self.create_user()
         restaurant = self.create_restaurant()
         return self.create_member(user, restaurant)
+
+    @classmethod
+    def does_restaurant_name_exists(cls, restaurant_name: str) -> bool:
+        return Restaurant.objects.filter(name=restaurant_name.strip()).exists()
+
+    @classmethod
+    def does_phone_number_exists(cls, contact: str) -> bool:
+        return User.objects.filter(username=contact.strip()).exists()
