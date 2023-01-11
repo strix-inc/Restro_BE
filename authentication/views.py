@@ -45,7 +45,9 @@ class UniqueCheckerView(View):
         phone = params.get("contact")
         restaurant_name = params.get("restaurant_name")
 
-        if restaurant_name and SignupService.does_restaurant_name_exists(restaurant_name):
+        if restaurant_name and SignupService.does_restaurant_name_exists(
+            restaurant_name
+        ):
             return HttpResponseBadRequest("Restaurant Name already exists")
 
         if phone and SignupService.does_phone_number_exists(phone):
