@@ -1,1 +1,1 @@
-from .sale import Bill, KOT, Order
+from .sale import Invoice, KOT, Order
