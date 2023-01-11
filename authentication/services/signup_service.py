@@ -35,3 +35,11 @@ class SignupService:
         user = self.create_user()
         restaurant = self.create_restaurant()
         return self.create_member(user, restaurant)
+
+    @classmethod
+    def does_restaurant_name_exists(cls, restaurant_name: str) -> bool:
+        return Restaurant.objects.filter(name=restaurant_name).exists()
+
+    @classmethod
+    def does_phone_number_exists(cls, contact: str) -> bool:
+        return User.objects.filter(username=contact).exists()
