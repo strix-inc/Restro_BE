@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 from django.contrib.auth.hashers import make_password
 
+
 class SignupService:
     def __init__(self, restaurant_name: str, phone: str, password: str) -> None:
         self.restaurant_name = restaurant_name.strip()
@@ -19,7 +20,8 @@ class SignupService:
     def create_restaurant(self):
         restaurant = Restaurant(
             name=self.restaurant_name,
-            display_name=self.restaurant_name
+            display_name=self.restaurant_name,
+            contact=self.phone,
         )
         restaurant.save()
         return restaurant
