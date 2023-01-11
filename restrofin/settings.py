@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'authentication',
     'kitchen',
+    'finance',
 ]
 
 MIDDLEWARE = [
