@@ -38,8 +38,8 @@ class SignupService:
 
     @classmethod
     def does_restaurant_name_exists(cls, restaurant_name: str) -> bool:
-        return Restaurant.objects.filter(name=restaurant_name).exists()
+        return Restaurant.objects.filter(name=restaurant_name.strip()).exists()
 
     @classmethod
     def does_phone_number_exists(cls, contact: str) -> bool:
-        return User.objects.filter(username=contact).exists()
+        return User.objects.filter(username=contact.strip()).exists()
