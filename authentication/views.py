@@ -1,15 +1,17 @@
 import json
-from authentication.services.signup_service import SignupService
 
-from django.http import HttpResponseBadRequest, HttpResponse
-from django.views import View
+from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
+
+from rest_framework.views import APIView
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
+from authentication.services import SignupService
+
 
 @method_decorator(csrf_exempt, name="dispatch")
-class Signup(View):
+class Signup(APIView):
     def post(self, request):
         """
         API to signup
@@ -36,10 +38,11 @@ class Signup(View):
 
         signup_obj = SignupService(restaurant_name, contact, password)
         member = signup_obj.signup()
-        return HttpResponse("OK!")
+        response_data = {"user_id": member.user.id, "username": member.user.name}
+        return JsonResponse(response_data)
 
 
-class UniqueCheckerView(View):
+class UniqueCheckerView(APIView):
     def get(self, request):
         params = request.GET
         phone = params.get("contact")
