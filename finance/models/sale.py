@@ -17,6 +17,10 @@ class Invoice(BaseFinanceModel):
         UPI = "UPI"
         CARD = "Card"
 
+    class PaymentStatus(models.TextChoices):
+        PENDING = "Pending"
+        PAID = "Paid"
+
     # * Money
     subtotal = models.FloatField(default=0.0)
     discount = models.FloatField(default=0.0)
@@ -34,10 +38,19 @@ class Invoice(BaseFinanceModel):
         Platform, on_delete=models.DO_NOTHING, null=True, blank=True
     )
     invoice_number = models.PositiveBigIntegerField(default=1)
+    amount_paid = models.FloatField(default=0.0)
     customer = models.ForeignKey(
         Customer, on_delete=models.DO_NOTHING, null=True, blank=True
     )
-    staff = models.ForeignKey(Staff, on_delete=models.DO_NOTHING)
+    staff = models.ForeignKey(Staff, on_delete=models.DO_NOTHING, null=True, blank=True)
+
+    @property
+    def amount_due(self):
+        return self.total - self.amount_paid
+
+    @property
+    def payment_status(self):
+        return self.PaymentStatus.PENDING if self.amount_due > 0 else self.PaymentStatus.PENDING
 
     def calculate_total(self):
         return (self.subtotal - self.discount) + self.cgst + self.sgst
@@ -55,14 +68,14 @@ class Invoice(BaseFinanceModel):
 
 
 class KOT(BaseFinanceModel):
-    bill = models.ForeignKey(Invoice, on_delete=models.DO_NOTHING)
-    items = models.JSONField(default=list) # * [{"id": "123", "name": "Chicken", "quantity": 1, "size": "half"}]
+    invoice = models.ForeignKey(Invoice, on_delete=models.DO_NOTHING)
+    items = models.JSONField(default=list) # * [{"id": "123", "name": "Chicken", "quantity": 1, "size": "Half"}]
 
 
 class Order(BaseFinanceModel):
     class Size(models.TextChoices):
-        HALF = "half"
-        FULL = "full"
+        HALF = "Half"
+        FULL = "Full"
 
     dish = models.ForeignKey(Dish, on_delete=models.DO_NOTHING)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
