@@ -22,7 +22,7 @@ class Signup(APIView):
             "password": "hello"
         }
         """
-        data = json.loads(request.body)
+        data = request.data
         restaurant_name = data.get("restaurant_name")
         contact = data.get("contact")
         password = data.get("password")
