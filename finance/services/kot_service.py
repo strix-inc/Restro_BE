@@ -9,11 +9,9 @@ class KOTService:
         self.restaurant = Restaurant.objects.get(id=restaurant_id)
 
     def create(self):
-        invoice, _ = Invoice.objects.get_or_create(table=self.table, restaurant=self.restaurant, finalized=False)
-        kot = KOT(
-            invoice=invoice,
-            items=self.items,
-            restaurant=self.restaurant
+        invoice, _ = Invoice.objects.get_or_create(
+            table=self.table, restaurant=self.restaurant, finalized=False
         )
+        kot = KOT(invoice=invoice, items=self.items, restaurant=self.restaurant)
         kot.save()
         return kot

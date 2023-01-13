@@ -50,7 +50,11 @@ class Invoice(BaseFinanceModel):
 
     @property
     def payment_status(self):
-        return self.PaymentStatus.PENDING if self.amount_due > 0 else self.PaymentStatus.PENDING
+        return (
+            self.PaymentStatus.PAID
+            if self.amount_due <= 0
+            else self.PaymentStatus.PENDING
+        )
 
     def calculate_total(self):
         return (self.subtotal - self.discount) + self.cgst + self.sgst
@@ -69,7 +73,9 @@ class Invoice(BaseFinanceModel):
 
 class KOT(BaseFinanceModel):
     invoice = models.ForeignKey(Invoice, on_delete=models.DO_NOTHING)
-    items = models.JSONField(default=list) # * [{"id": "123", "name": "Chicken", "quantity": 1, "size": "Half"}]
+    items = models.JSONField(
+        default=list
+    )  # * [{"id": "123", "name": "Chicken", "quantity": 1, "size": "Half"}]
 
 
 class Order(BaseFinanceModel):
