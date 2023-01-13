@@ -22,7 +22,7 @@ class Signup(APIView):
             "password": "hello"
         }
         """
-        data = request.POST or json.loads(request.body)
+        data = request.data
         restaurant_name = data.get("restaurant_name")
         contact = data.get("contact")
         password = data.get("password")
@@ -38,13 +38,13 @@ class Signup(APIView):
 
         signup_obj = SignupService(restaurant_name, contact, password)
         member = signup_obj.signup()
-        response_data = {"user_id": member.user.id, "username": member.user.name}
+        response_data = {"user_id": member.user.id, "username": member.user.username}
         return JsonResponse(response_data)
 
 
 class UniqueCheckerView(APIView):
     def get(self, request):
-        params = request.GET
+        params = request.query_params
         phone = params.get("contact")
         restaurant_name = params.get("restaurant_name")
 
