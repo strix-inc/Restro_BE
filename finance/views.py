@@ -8,6 +8,7 @@ from authentication.mixins import MemberAccessMixin
 from .serializers import KOTSerializer
 from .services.kot_service import KOTService
 
+
 class KOTView(APIView, MemberAccessMixin):
     permission_classes = (IsAuthenticated,)
 
