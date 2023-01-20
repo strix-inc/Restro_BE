@@ -3,11 +3,14 @@ import json
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from authentication.models.member import Member
 
 from authentication.services import SignupService
+from .serializers import RestaurantSerializer
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -57,3 +60,14 @@ class UniqueCheckerView(APIView):
             return HttpResponseBadRequest("Phone number already exists")
 
         return HttpResponse("Ok!")
+
+
+class RestaurantView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        member = Member.objects.get(user=user)
+        restaurant = member.restaurant
+        data = RestaurantSerializer(restaurant).data
+        return JsonResponse({"data": data})
