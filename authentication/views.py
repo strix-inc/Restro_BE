@@ -1,5 +1,3 @@
-import json
-
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 
 from rest_framework.views import APIView
@@ -7,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from authentication.models.member import Member
+from authentication.mixins import MemberAccessMixin
 
 from authentication.services import SignupService
 from .serializers import RestaurantSerializer
@@ -62,12 +60,19 @@ class UniqueCheckerView(APIView):
         return HttpResponse("Ok!")
 
 
-class RestaurantView(APIView):
+class RestaurantView(APIView, MemberAccessMixin):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        user = request.user
-        member = Member.objects.get(user=user)
-        restaurant = member.restaurant
+        restaurant = self.get_restaurant(request)
         data = RestaurantSerializer(restaurant).data
         return JsonResponse({"data": data})
+
+    def put(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        serializer = RestaurantSerializer(restaurant, data=data)
+        if not serializer.is_valid():
+            return HttpResponseBadRequest(serializer.errors)
+        serializer.save()
+        return HttpResponse("Restaurant Details Updated", status=201)

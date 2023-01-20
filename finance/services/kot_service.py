@@ -3,10 +3,10 @@ from finance.models import KOT, Invoice
 
 
 class KOTService:
-    def __init__(self, items: list, table: str, restaurant_id: str) -> None:
+    def __init__(self, items: list, table: str, restaurant: Restaurant) -> None:
         self.items = items
         self.table = table
-        self.restaurant = Restaurant.objects.get(id=restaurant_id)
+        self.restaurant = restaurant
 
     def create(self):
         invoice, _ = Invoice.objects.get_or_create(
