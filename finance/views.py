@@ -1,4 +1,8 @@
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
+from django.http import (
+    JsonResponse,
+    HttpResponseBadRequest,
+    HttpResponseNotFound,
+)
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -13,23 +17,19 @@ from .services.kot_service import KOTService
 class KOTView(APIView, MemberAccessMixin):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, restaurant_id: str):
-        user = request.user
-        is_valid_member = self.is_authorized_for_restaurant(user, restaurant_id)
-        if not is_valid_member:
-            return HttpResponseForbidden("Invalid Member for the restaurant")
-
+    def get(self, request):
+        restaurant = self.get_restaurant(request)
         kot_id = request.query_params.get("id")
 
         if not kot_id:
             return HttpResponseBadRequest("kot_id param is missing")
         try:
-            kot = KOT.objects.get(id=kot_id, restaurant_id=restaurant_id)
+            kot = KOT.objects.get(id=kot_id, restaurant=restaurant)
         except KOT.DoesNotExist:
             return HttpResponseNotFound("KOT does not exist")
         return JsonResponse({"data": KOTSerializer(kot).data})
 
-    def post(self, request, restaurant_id: str):
+    def post(self, request):
         """
         Request Body
         {
@@ -44,10 +44,7 @@ class KOTView(APIView, MemberAccessMixin):
             ]
         }
         """
-        user = request.user
-        is_valid_member = self.is_authorized_for_restaurant(user, restaurant_id)
-        if not is_valid_member:
-            return HttpResponseForbidden("Invalid Member for the restaurant")
+        restaurant = self.get_restaurant(request)
 
         data = request.data
         items = data.get("items", [])
@@ -56,6 +53,6 @@ class KOTView(APIView, MemberAccessMixin):
         if not all([items, table]):
             return HttpResponseBadRequest("items & table are required values")
 
-        kot = KOTService(items=items, table=table, restaurant_id=restaurant_id).create()
+        kot = KOTService(items=items, table=table, restaurant=restaurant).create()
 
         return JsonResponse({"data": KOTSerializer(kot).data})

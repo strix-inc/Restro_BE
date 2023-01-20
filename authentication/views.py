@@ -1,13 +1,14 @@
-import json
-
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from authentication.mixins import MemberAccessMixin
 
 from authentication.services import SignupService
+from .serializers import RestaurantSerializer
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -57,3 +58,21 @@ class UniqueCheckerView(APIView):
             return HttpResponseBadRequest("Phone number already exists")
 
         return HttpResponse("Ok!")
+
+
+class RestaurantView(APIView, MemberAccessMixin):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        restaurant = self.get_restaurant(request)
+        data = RestaurantSerializer(restaurant).data
+        return JsonResponse({"data": data})
+
+    def put(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        serializer = RestaurantSerializer(restaurant, data=data)
+        if not serializer.is_valid():
+            return HttpResponseBadRequest(serializer.errors)
+        serializer.save()
+        return HttpResponse("Restaurant Details Updated", status=201)
