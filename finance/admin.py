@@ -1,5 +1,5 @@
 from django.contrib import admin
-from finance.models import Customer, Invoice, KOT, Order
+from finance.models.sale import Customer, Invoice, KOT, Order
 
 # Register your models here.
 admin.site.register([Customer, Invoice, KOT, Order])
