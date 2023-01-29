@@ -9,6 +9,9 @@ class Category(BaseKitchenModel):
     class Meta:
         unique_together = ("restaurant", "name")
 
+    def __str__(self) -> str:
+        return f"{self.name} ({self.restaurant.name})"
+
 
 class Dish(BaseKitchenModel):
     class Unit(models.TextChoices):
@@ -21,6 +24,9 @@ class Dish(BaseKitchenModel):
     class Meta:
         unique_together = ("restaurant", "name", "category")
 
+    def __str__(self) -> str:
+        return f"{self.name} ({self.restaurant.name})"
+
 
 class DishRate(BaseKitchenModel):
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
@@ -30,3 +36,6 @@ class DishRate(BaseKitchenModel):
 
     class Meta:
         unique_together = ("restaurant", "dish", "platform")
+
+    def __str__(self) -> str:
+        return f"{self.dish.name} - {self.platform.name} ({self.restaurant.name})"

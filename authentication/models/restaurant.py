@@ -28,3 +28,6 @@ class Restaurant(BaseModel):
     contact = models.CharField(max_length=32, null=True, blank=True)
     display_name = models.CharField(max_length=256, null=True, blank=True)
     upi_id = models.CharField(max_length=256, null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.name
