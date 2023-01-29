@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from authentication.mixins import MemberAccessMixin
 from kitchen.serializers import DishSerializer
 from kitchen.services.dish_service import DishService
-from .models.food import Dish
+from .models.food import Dish, DishRate
 
 
 class DishView(APIView, MemberAccessMixin):
@@ -89,5 +89,6 @@ class DishView(APIView, MemberAccessMixin):
         except Dish.DoesNotExist:
             return HttpResponseNotFound("Dish Not Found")
         else:
+            DishRate.objects.filter(dish=dish).delete()
             dish.delete()
             return HttpResponse("Dish Deleted")
