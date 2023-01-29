@@ -40,5 +40,5 @@ class DishService:
         dish.name = name
         dish.category = category
         dish.save()
-        self.add_dish_rates(dish, rates, self.restaurant)
+        self.add_dish_rates(dish, rates)
         return dish
