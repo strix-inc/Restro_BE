@@ -61,11 +61,10 @@ class DishView(APIView, MemberAccessMixin):
         """
         restaurant = self.get_restaurant(request)
         data = request.data
-        dish = DishService.create_new_dish(
+        dish = DishService(restaurant=restaurant).create_new_dish(
             name=data["name"],
             category=data["category"],
-            rates=data["rates"],
-            restaurant=restaurant,
+            rates=data["rates"]
         )
         dish_serializer = DishSerializer(dish)
         return JsonResponse({"data": dish_serializer.data}, status=201)
@@ -73,12 +72,11 @@ class DishView(APIView, MemberAccessMixin):
     def put(self, request):
         restaurant = self.get_restaurant(request)
         data = request.data
-        dish = DishService.update_dish(
+        dish = DishService(restaurant=restaurant).update_dish(
             dish_id=data["id"],
             name=data["name"],
             category=data["category"],
-            rates=data["rates"],
-            restaurant=restaurant,
+            rates=data["rates"]
         )
         dish_serializer = DishSerializer(dish)
         return JsonResponse({"data": dish_serializer.data}, status=201)

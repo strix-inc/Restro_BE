@@ -3,6 +3,9 @@ from authentication.models.restaurant import Restaurant
 from django.contrib.auth.models import User
 
 from django.contrib.auth.hashers import make_password
+from kitchen.services.category_service import CategoryService
+
+from kitchen.services.platform_service import PlatformService
 
 
 class SignupService:
@@ -34,6 +37,8 @@ class SignupService:
     def signup(self) -> Member:
         user = self.create_user()
         restaurant = self.create_restaurant()
+        PlatformService(restaurant=restaurant).create_defaults()
+        CategoryService(restaurant=restaurant).create_defaults()
         return self.create_member(user, restaurant)
 
     @classmethod
