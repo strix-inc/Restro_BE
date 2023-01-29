@@ -17,7 +17,7 @@ class SignupService:
         user.save()
         return user
 
-    def create_restaurant(self):
+    def create_restaurant(self) -> Restaurant:
         restaurant = Restaurant(
             name=self.restaurant_name,
             display_name=self.restaurant_name,
@@ -26,7 +26,7 @@ class SignupService:
         restaurant.save()
         return restaurant
 
-    def create_member(self, user: User, restaurant: Restaurant):
+    def create_member(self, user: User, restaurant: Restaurant) -> Member:
         member = Member(user=user, restaurant=restaurant)
         member.save()
         return member

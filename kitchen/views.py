@@ -73,3 +73,16 @@ class DishView(APIView, MemberAccessMixin):
         )
         dish_serializer = DishSerializer(dish)
         return JsonResponse({"data": dish_serializer.data}, status=201)
+
+    def put(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        dish = DishService.update_dish(
+            dish_id=data["id"],
+            name=data["name"],
+            category=data["category"],
+            rates=data["rates"],
+            restaurant=restaurant,
+        )
+        dish_serializer = DishSerializer(dish)
+        return JsonResponse({"data": dish_serializer.data}, status=201)
