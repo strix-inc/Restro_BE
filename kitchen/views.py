@@ -1,9 +1,5 @@
 from collections import OrderedDict
-from django.http import (
-    JsonResponse,
-    HttpResponseBadRequest,
-    HttpResponseNotFound,
-)
+from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -86,3 +82,14 @@ class DishView(APIView, MemberAccessMixin):
         )
         dish_serializer = DishSerializer(dish)
         return JsonResponse({"data": dish_serializer.data}, status=201)
+
+    def delete(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        try:
+            dish = Dish.objects.get(id=data["id"], restaurant=restaurant)
+        except Dish.DoesNotExist:
+            return HttpResponseNotFound("Dish Not Found")
+        else:
+            dish.delete()
+            return HttpResponse("Dish Deleted")
