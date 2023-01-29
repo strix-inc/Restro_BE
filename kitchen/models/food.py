@@ -17,9 +17,14 @@ class Dish(BaseKitchenModel):
     class Unit(models.TextChoices):
         PLATE = "plate"
 
+    class DishType(models.TextChoices):
+        VEG = "Veg"
+        NON_VEG = "Non-Veg"
+
     name = models.CharField(max_length=32)
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING)
     unit = models.CharField(max_length=64, choices=Unit.choices, default=Unit.PLATE)
+    dish_type = models.CharField(max_length=64, choices=DishType.choices, default=DishType.VEG)
 
     class Meta:
         unique_together = ("restaurant", "name", "category")

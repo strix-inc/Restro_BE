@@ -40,6 +40,9 @@ class DishView(APIView, MemberAccessMixin):
         dish_serializer = DishSerializer(dishes, many=True)
         return JsonResponse({"data": self._group_into_categories(dish_serializer.data)})
 
+    def _get_dish_type(self, dish_type: str) -> Dish.DishType:
+        return Dish.DishType.VEG if dish_type.lower() == "veg" else Dish.DishType.NON_VEG
+
     def post(self, request):
         """
         {
@@ -64,7 +67,8 @@ class DishView(APIView, MemberAccessMixin):
         dish = DishService(restaurant=restaurant).create_new_dish(
             name=data["name"],
             category=data["category"],
-            rates=data["rates"]
+            rates=data["rates"],
+            dish_type=self._get_dish_type(dish_type=data["dish_type"])
         )
         dish_serializer = DishSerializer(dish)
         return JsonResponse({"data": dish_serializer.data}, status=201)
@@ -76,10 +80,11 @@ class DishView(APIView, MemberAccessMixin):
             dish_id=data["id"],
             name=data["name"],
             category=data["category"],
-            rates=data["rates"]
+            rates=data["rates"],
+            dish_type=self._get_dish_type(dish_type=data["dish_type"])
         )
         dish_serializer = DishSerializer(dish)
-        return JsonResponse({"data": dish_serializer.data}, status=201)
+        return JsonResponse({"data": dish_serializer.data}, status=200)
 
     def delete(self, request):
         restaurant = self.get_restaurant(request)
