@@ -12,6 +12,10 @@ class Category(BaseKitchenModel):
     def __str__(self) -> str:
         return f"{self.name} ({self.restaurant.name})"
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.strip().upper()
+        super().save()
+
 
 class Dish(BaseKitchenModel):
     class Unit(models.TextChoices):

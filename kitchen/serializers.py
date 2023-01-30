@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from kitchen.models.food import Dish, DishRate
+from kitchen.models.food import Dish, DishRate, Category
 from kitchen.models.platform import Platform
 
 
@@ -29,4 +29,10 @@ class DishSerializer(serializers.ModelSerializer):
 class PlatformSerializer(serializers.ModelSerializer):
     class Meta:
         model = Platform
+        fields = "__all__"
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
         fields = "__all__"

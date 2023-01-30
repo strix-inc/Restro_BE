@@ -6,9 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from authentication.mixins import MemberAccessMixin
 from kitchen.models.platform import Platform
-from kitchen.serializers import DishSerializer, PlatformSerializer
+from kitchen.serializers import DishSerializer, PlatformSerializer, CategorySerializer
 from kitchen.services.dish_service import DishService
-from .models.food import Dish, DishRate
+from .models.food import Dish, DishRate, Category
 
 
 class DishView(APIView, MemberAccessMixin):
@@ -156,3 +156,60 @@ class PlatformView(APIView, MemberAccessMixin):
         else:
             platform.delete()
             return HttpResponse("Platform Deleted")
+        
+
+class CategoryView(APIView, MemberAccessMixin):
+    def get(self, request):
+        category_id = request.query_params.get("id")
+        restaurant = self.get_restaurant(request)
+
+        if category_id:
+            try:
+                category = Category.objects.get(id=category_id, restaurant=restaurant)
+            except Category.DoesNotExist:
+                return HttpResponseNotFound("No Category Found")
+            else:
+                serializer = CategorySerializer(category)
+                return JsonResponse({"data": serializer.data})
+
+        categories = Category.objects.filter(restaurant=restaurant)
+        serializer = CategorySerializer(categories, many=True)
+        return JsonResponse({"data": serializer.data})
+
+    def post(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        name = data["name"]
+        category, _ = Category.objects.get_or_create(
+            name=name.strip().upper(), restaurant=restaurant
+        )
+        serializer = CategorySerializer(category)
+        return JsonResponse({"data": serializer.data}, status=201)
+
+    def put(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        category_id = data["id"]
+        name = data["name"]
+        try:
+            category = Category.objects.get(id=category_id, restaurant=restaurant)
+        except Category.DoesNotExist:
+            return HttpResponseNotFound("Platform Not Found")
+        else:
+            category.name = name
+            category.save()
+            serializer = CategorySerializer(category)
+            return JsonResponse({"data": serializer.data}, status=200)
+
+    def delete(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        category_id = data["id"]
+        try:
+            category = Category.objects.get(id=category_id, restaurant=restaurant)
+        except Category.DoesNotExist:
+            return HttpResponseNotFound("Platform Not Found")
+        else:
+            category.delete()
+            return HttpResponse("Platform Deleted")
+
