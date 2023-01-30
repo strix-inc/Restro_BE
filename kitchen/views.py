@@ -103,6 +103,8 @@ class DishView(APIView, MemberAccessMixin):
 
 
 class PlatformView(APIView, MemberAccessMixin):
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         platform_id = request.query_params.get("id")
         restaurant = self.get_restaurant(request)
@@ -159,6 +161,8 @@ class PlatformView(APIView, MemberAccessMixin):
         
 
 class CategoryView(APIView, MemberAccessMixin):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request):
         category_id = request.query_params.get("id")
         restaurant = self.get_restaurant(request)
@@ -211,5 +215,5 @@ class CategoryView(APIView, MemberAccessMixin):
             return HttpResponseNotFound("Platform Not Found")
         else:
             category.delete()
-            return HttpResponse("Platform Deleted")
+            return HttpResponse("Category Deleted")
 
