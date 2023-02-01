@@ -39,7 +39,7 @@ class DishView(APIView, MemberAccessMixin):
 
         dishes = Dish.objects.filter(restaurant=restaurant)
         dish_serializer = DishSerializer(dishes, many=True)
-        return JsonResponse({"data": self._group_into_categories(dish_serializer.data)})
+        return JsonResponse({"data": dish_serializer.data})
 
     def _get_dish_type(self, dish_type: str) -> Dish.DishType:
         return (
@@ -158,11 +158,11 @@ class PlatformView(APIView, MemberAccessMixin):
         else:
             platform.delete()
             return HttpResponse("Platform Deleted")
-        
+
 
 class CategoryView(APIView, MemberAccessMixin):
     permission_classes = (IsAuthenticated,)
-    
+
     def get(self, request):
         category_id = request.query_params.get("id")
         restaurant = self.get_restaurant(request)
@@ -216,4 +216,3 @@ class CategoryView(APIView, MemberAccessMixin):
         else:
             category.delete()
             return HttpResponse("Category Deleted")
-
