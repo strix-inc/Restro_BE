@@ -12,6 +12,9 @@ class Customer(BaseFinanceModel):
 
 
 class Invoice(BaseFinanceModel):
+    CGST_PERCENT = 0.025
+    SGST_PERCENT = 0.025
+
     class PaymentType(models.TextChoices):
         CASH = "Cash"
         UPI = "UPI"
@@ -59,6 +62,18 @@ class Invoice(BaseFinanceModel):
     def calculate_total(self):
         return (self.subtotal - self.discount) + self.cgst + self.sgst
 
+    @property
+    def cgst_percent(self):
+        return self.CGST_PERCENT if self.restaurant.gstin else 0.0
+
+    @property
+    def cgst_percent(self):
+        return self.SGST_PERCENT if self.restaurant.gstin else 0.0
+
+    def calculate_gst(self):
+        self.cgst = self.subtotal * self.cgst_percent
+        self.sgst = self.subtotal * self.sgst_percent
+
     def save(self, *args, **kwargs):
         if not self.pk:
             last_count = self.objects.all(restaurant=self.restaurant).count()
@@ -73,9 +88,6 @@ class Invoice(BaseFinanceModel):
 
 class KOT(BaseFinanceModel):
     invoice = models.ForeignKey(Invoice, on_delete=models.DO_NOTHING)
-    items = models.JSONField(
-        default=list
-    )  # * [{"id": "123", "name": "Chicken", "quantity": 1, "size": "Half"}]
 
 
 class Order(BaseFinanceModel):
@@ -85,6 +97,7 @@ class Order(BaseFinanceModel):
 
     dish = models.ForeignKey(Dish, on_delete=models.DO_NOTHING)
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=0)
+    kot = models.ForeignKey(KOT, on_delete=models.CASCADE, null=True)
+    quantity = models.IntegerField(default=1)
     size = models.CharField(max_length=16, choices=Size.choices, default=Size.FULL)
     cost = models.FloatField(default=0.0)

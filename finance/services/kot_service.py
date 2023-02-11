@@ -1,5 +1,5 @@
 from authentication.models import Restaurant
-from finance.models import KOT, Invoice
+from finance.models import KOT, Invoice, Order
 
 
 class KOTService:
@@ -8,10 +8,25 @@ class KOTService:
         self.table = table
         self.restaurant = restaurant
 
+    def create_items(self, kot: KOT):
+        objects = [
+            Order(
+                dish_id=item["id"],
+                restaurant=self.restaurant,
+                kot=kot,
+                invoice=kot.invoice,
+                quantity=item["quantity"],
+                size=item["size"],
+            )
+            for item in self.items
+        ]
+        Order.objects.bulk_create(objects)
+
     def create(self):
         invoice, _ = Invoice.objects.get_or_create(
             table=self.table, restaurant=self.restaurant, finalized=False
         )
-        kot = KOT(invoice=invoice, items=self.items, restaurant=self.restaurant)
+        kot = KOT(invoice=invoice, restaurant=self.restaurant)
         kot.save()
+        self.create_items(kot)
         return kot

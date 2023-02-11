@@ -1,3 +1,4 @@
+from distutils.util import strtobool
 from django.http import (
     JsonResponse,
     HttpResponseBadRequest,
@@ -8,26 +9,42 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from authentication.mixins import MemberAccessMixin
-from finance.models.sale import KOT
+from finance.models.sale import KOT, Invoice
 
-from .serializers import KOTSerializer
+from .serializers import InvoiceSerializer, KOTSerializer
 from .services.kot_service import KOTService
 
 
-class KOTView(APIView, MemberAccessMixin):
+class BaseView(APIView, MemberAccessMixin):
     permission_classes = (IsAuthenticated,)
 
+
+class KOTView(BaseView):
     def get(self, request):
         restaurant = self.get_restaurant(request)
         kot_id = request.query_params.get("id")
 
-        if not kot_id:
-            return HttpResponseBadRequest("kot_id param is missing")
-        try:
-            kot = KOT.objects.get(id=kot_id, restaurant=restaurant)
-        except KOT.DoesNotExist:
-            return HttpResponseNotFound("KOT does not exist")
-        return JsonResponse({"data": KOTSerializer(kot).data})
+        if kot_id:
+            try:
+                kot = KOT.objects.get(id=kot_id, restaurant=restaurant)
+            except KOT.DoesNotExist:
+                return HttpResponseNotFound("KOT does not exist")
+            else:
+                return JsonResponse({"data": KOTSerializer(kot).data})
+
+        kots = KOT.objects.filter(restaurant=restaurant)
+
+        invoice_id = request.query_params.get("invoice_id")
+        finalized = strtobool(request.query_params.get("finalized", "false"))
+        if invoice_id:
+            kots = kots.filter(invoice_id=invoice_id)
+
+        invoices = Invoice.objects.filter(restaurant=restaurant, finalized=finalized)
+        kots = kots.filter(invoice__in=invoices)
+
+        kots = kots.order_by("-created_at")
+        serializer = KOTSerializer(kots, many=True)
+        return JsonResponse({"data": serializer.data})
 
     def post(self, request):
         """
@@ -54,5 +71,38 @@ class KOTView(APIView, MemberAccessMixin):
             return HttpResponseBadRequest("items & table are required values")
 
         kot = KOTService(items=items, table=table, restaurant=restaurant).create()
-
         return JsonResponse({"data": KOTSerializer(kot).data})
+
+
+class InvoiceView(BaseView):
+    def get(self, request):
+        restaurant = self.get_restaurant(request)
+        invoice_id = request.query_params.get("id")
+        if invoice_id:
+            try:
+                invoice = Invoice.objects.get(id=invoice_id, restaurant=restaurant)
+            except Invoice.DoesNotExist:
+                return HttpResponseNotFound("Invoice Does Not Exist")
+            else:
+                serializer = InvoiceSerializer(invoice)
+                return JsonResponse({"data": serializer.data})
+
+        finalized = strtobool(request.query_params.get("finalized", "true"))
+        invoices = Invoice.objects.filter(
+            restaurant=restaurant, finalized=finalized
+        ).order_by("-created_at")
+        serializer = InvoiceSerializer(invoices, many=True)
+        return JsonResponse({"data": serializer.data})
+
+    def post(self, request):
+        # Create an Invoice
+        """
+        [
+            {
+                "id": "123",
+                "dish_id": "xyz",
+                "
+            }
+        ]
+        """
+        ...

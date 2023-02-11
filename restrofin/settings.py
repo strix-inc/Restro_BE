@@ -132,3 +132,6 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
     'UPDATE_LAST_LOGIN': True,
 }
+
+
+TIME_ZONE = "Asia/Kolkata"
