@@ -67,7 +67,7 @@ class Invoice(BaseFinanceModel):
         return self.CGST_PERCENT if self.restaurant.gstin else 0.0
 
     @property
-    def cgst_percent(self):
+    def sgst_percent(self):
         return self.SGST_PERCENT if self.restaurant.gstin else 0.0
 
     def calculate_gst(self):
@@ -75,10 +75,7 @@ class Invoice(BaseFinanceModel):
         self.sgst = self.subtotal * self.sgst_percent
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            last_count = self.objects.all(restaurant=self.restaurant).count()
-            self.invoice_number = last_count + 1
-
+        self.calculate_gst()
         self.total = round(self.calculate_total(), 2)
         self.subtotal = round(self.subtotal, 2)
         self.cgst = round(self.cgst, 2)

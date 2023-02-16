@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from authentication.mixins import MemberAccessMixin
 from finance.models.sale import KOT, Invoice
+from finance.services.invoice_service import InvoiceService
 
 from .serializers import InvoiceSerializer, KOTSerializer
 from .services.kot_service import KOTService
@@ -94,15 +95,32 @@ class InvoiceView(BaseView):
         serializer = InvoiceSerializer(invoices, many=True)
         return JsonResponse({"data": serializer.data})
 
-    def post(self, request):
-        # Create an Invoice
+    def put(self, request):
         """
-        [
-            {
-                "id": "123",
-                "dish_id": "xyz",
-                "
-            }
-        ]
+        {
+            "id": "xajcnanl",
+            "discount": 100.0,
+            "subtotal": 200.0,
+            "platform": "platform_id_123"
+            "orders": [
+                {
+                    "id": "123",
+                    "dish_id": "xyz",
+                    "quantity": 2,
+                    "size": "half",
+                }
+            ]
+        }
         """
-        ...
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        invoice = InvoiceService(
+            invoice_id=data["id"],
+            platform_id=data["platform"],
+            restaurant=restaurant,
+            orders=data["orders"],
+            subtotal=data["subtotal"],
+            discount=data["discount"],
+        ).update_invoice()
+        serializer = InvoiceSerializer(invoice)
+        return JsonResponse({"data": serializer.data}, status=201)

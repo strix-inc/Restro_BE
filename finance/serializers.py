@@ -25,7 +25,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    rates = serializers.SerializerMethodField("invoice_orders")
+    orders = serializers.SerializerMethodField("invoice_orders")
 
     def invoice_orders(self, invoice):
         orders = Order.objects.filter(invoice=invoice)
