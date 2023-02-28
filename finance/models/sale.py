@@ -84,7 +84,7 @@ class Invoice(BaseFinanceModel):
 
 
 class KOT(BaseFinanceModel):
-    invoice = models.ForeignKey(Invoice, on_delete=models.DO_NOTHING)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
 
 
 class Order(BaseFinanceModel):
