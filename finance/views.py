@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from authentication.mixins import MemberAccessMixin
-from finance.models.sale import KOT, Invoice
+from finance.models.sale import KOT, Invoice, Order
 from finance.services.invoice_service import InvoiceService
 
 from .serializers import InvoiceSerializer, KOTSerializer
@@ -124,3 +124,12 @@ class InvoiceView(BaseView):
         ).update_invoice()
         serializer = InvoiceSerializer(invoice)
         return JsonResponse({"data": serializer.data}, status=201)
+
+
+class OrderView(BaseView):
+    def delete(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        order_id = data["id"]
+        Order.objects.filter(id=order_id, restaurant=restaurant).delete()
+        return JsonResponse({"data": f"Order with ID {order_id} deleted"}, status=200)
