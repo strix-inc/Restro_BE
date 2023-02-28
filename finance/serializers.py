@@ -6,7 +6,7 @@ from .models import KOT, Invoice, Order
 class KOTSerializer(serializers.ModelSerializer):
     table = serializers.CharField(source="invoice.table")
 
-    rates = serializers.SerializerMethodField("kot_orders")
+    orders = serializers.SerializerMethodField("kot_orders")
 
     def kot_orders(self, kot):
         orders = Order.objects.filter(kot=kot)
