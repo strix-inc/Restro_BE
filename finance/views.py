@@ -125,6 +125,13 @@ class InvoiceView(BaseView):
         serializer = InvoiceSerializer(invoice)
         return JsonResponse({"data": serializer.data}, status=201)
 
+    def delete(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        order_id = data["id"]
+        Invoice.objects.filter(id=order_id, restaurant=restaurant).delete()
+        return JsonResponse({"data": f"Invoice with ID {order_id} deleted"}, status=200)
+
 
 class OrderView(BaseView):
     def delete(self, request):
