@@ -21,13 +21,13 @@ class DishService:
             dish_rate.save()
 
     def create_new_dish(
-        self, name: str, category: str, rates: list, dish_type: Dish.DishType
+        self, name: str, category_name: str, rates: list, dish_type: Dish.DishType
     ) -> Dish:
         category, _ = Category.objects.get_or_create(
-            name=name.strip().upper(), restaurant=self.restaurant
+            name=category_name.strip().upper(), restaurant=self.restaurant
         )
         dish, _ = Dish.objects.get_or_create(
-            name=name.upper(), category=category, restaurant=self.restaurant, dish_type=dish_type
+            name=name.strip().upper(), category=category, restaurant=self.restaurant, dish_type=dish_type
         )
         self.add_dish_rates(dish, rates)
         return dish

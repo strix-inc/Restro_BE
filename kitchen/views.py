@@ -69,7 +69,7 @@ class DishView(APIView, MemberAccessMixin):
         data = request.data
         dish = DishService(restaurant=restaurant).create_new_dish(
             name=data["name"],
-            category=data["category"],
+            category_name=data["category"],
             rates=data["rates"],
             dish_type=self._get_dish_type(dish_type=data["dish_type"]),
         )
