@@ -27,7 +27,7 @@ class DishService:
             name=name.strip().upper(), restaurant=self.restaurant
         )
         dish, _ = Dish.objects.get_or_create(
-            name=name, category=category, restaurant=self.restaurant, dish_type=dish_type
+            name=name.upper(), category=category, restaurant=self.restaurant, dish_type=dish_type
         )
         self.add_dish_rates(dish, rates)
         return dish
