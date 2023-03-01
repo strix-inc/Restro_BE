@@ -25,6 +25,7 @@ class DishService:
         dish, _ = Dish.objects.get_or_create(
             name=name.strip().upper(), category=category, restaurant=self.restaurant, dish_type=dish_type
         )
+        return dish
 
     def create_new_dish(
         self, name: str, category_name: str, rates: list, dish_type: Dish.DishType

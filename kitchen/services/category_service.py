@@ -12,3 +12,9 @@ class CategoryService:
         for category in self.DEFAULT_CATEGORIES:
             obj = Category(name=category, restaurant=self.restaurant)
             obj.save()
+
+    def get_category(self, name):
+        category, _ = Category.objects.get_or_create(
+            name=name.strip().upper(), restaurant=self.restaurant
+        )
+        return category
