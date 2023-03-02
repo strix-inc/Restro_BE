@@ -19,6 +19,8 @@ class KOTSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    dish_name = serializers.CharField(source="dish.name")
+
     class Meta:
         model = Order
         fields = "__all__"
