@@ -40,7 +40,7 @@ class Invoice(BaseFinanceModel):
     platform = models.ForeignKey(
         Platform, on_delete=models.DO_NOTHING, null=True, blank=True
     )
-    invoice_number = models.PositiveBigIntegerField(default=1)
+    invoice_number = models.PositiveBigIntegerField(null=True, blank=True)
     amount_paid = models.FloatField(default=0.0)
     customer = models.ForeignKey(
         Customer, on_delete=models.DO_NOTHING, null=True, blank=True
@@ -80,7 +80,9 @@ class Invoice(BaseFinanceModel):
         self.subtotal = round(self.subtotal, 2)
         self.cgst = round(self.cgst, 2)
         self.sgst = round(self.sgst, 2)
-        super().save(*args, **kwargs)
+        if self.finalized and not self.invoice_number:
+            self.invoice_number = Invoice.objects.filter(restaurant=self.restaurant, finalized=True).count() + 1
+        return super().save(*args, **kwargs)
 
 
 class KOT(BaseFinanceModel):

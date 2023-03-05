@@ -60,11 +60,5 @@ class InvoiceService:
         self.invoice.discount = self.discount
         if not self.invoice.finalized:
             self.invoice.finalized = True
-            self.invoice.invoice_number = (
-                Invoice.objects.filter(
-                    restaurant=self.restaurant, finalized=True
-                ).count()
-                + 1
-            )
         self.invoice.save()
         return self.invoice
