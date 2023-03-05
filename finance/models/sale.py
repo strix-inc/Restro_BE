@@ -41,6 +41,8 @@ class Invoice(BaseFinanceModel):
         Platform, on_delete=models.DO_NOTHING, null=True, blank=True
     )
     invoice_number = models.PositiveBigIntegerField(null=True, blank=True)
+    # * invoice number with prefix
+    invoice_number_full = models.CharField(max_length=32, null=True, blank=True)
     amount_paid = models.FloatField(default=0.0)
     customer = models.ForeignKey(
         Customer, on_delete=models.DO_NOTHING, null=True, blank=True
@@ -74,14 +76,18 @@ class Invoice(BaseFinanceModel):
         self.cgst = self.subtotal * self.cgst_percent
         self.sgst = self.subtotal * self.sgst_percent
 
+    def assign_invoice_number(self):
+        if self.finalized and not self.invoice_number:
+            self.invoice_number = Invoice.objects.filter(restaurant=self.restaurant, finalized=True).count() + 1
+            self.invoice_number_full = f"{self.restaurant.invoice_prefix}{self.invoice_number}"
+
     def save(self, *args, **kwargs):
         self.calculate_gst()
         self.total = round(self.calculate_total(), 2)
         self.subtotal = round(self.subtotal, 2)
         self.cgst = round(self.cgst, 2)
         self.sgst = round(self.sgst, 2)
-        if self.finalized and not self.invoice_number:
-            self.invoice_number = Invoice.objects.filter(restaurant=self.restaurant, finalized=True).count() + 1
+        self.assign_invoice_number()
         return super().save(*args, **kwargs)
 
 
