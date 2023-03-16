@@ -23,7 +23,7 @@ class DishService:
 
     def get_dish(self, name: str, category: Category, dish_type: Dish.DishType):
         dish, _ = Dish.objects.get_or_create(
-            name=name.strip().upper(), category=category, restaurant=self.restaurant, dish_type=dish_type
+            name=name.strip().upper(), category=category, restaurant=self.restaurant, dish_type=dish_type, is_deleted=False
         )
         return dish
 

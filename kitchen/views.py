@@ -30,14 +30,14 @@ class DishView(APIView, MemberAccessMixin):
 
         if dish_id:
             try:
-                dish = Dish.objects.get(id=dish_id, restaurant=restaurant)
+                dish = Dish.objects.get(id=dish_id, restaurant=restaurant, is_deleted=False)
             except Dish.DoesNotExist:
                 return HttpResponseNotFound("No Dish Found")
             else:
                 dish_serializer = DishSerializer(dish)
                 return JsonResponse({"data": dish_serializer.data})
 
-        dishes = Dish.objects.filter(restaurant=restaurant)
+        dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False)
         dish_serializer = DishSerializer(dishes, many=True)
         return JsonResponse({"data": dish_serializer.data})
 
@@ -97,8 +97,9 @@ class DishView(APIView, MemberAccessMixin):
         except Dish.DoesNotExist:
             return HttpResponseNotFound("Dish Not Found")
         else:
-            DishRate.objects.filter(dish=dish).delete()
-            dish.delete()
+            DishRate.objects.filter(dish=dish).update(is_deleted=True)
+            dish.is_deleted = True
+            dish.save()
             return HttpResponse("Dish Deleted")
 
 
