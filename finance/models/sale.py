@@ -90,6 +90,10 @@ class Invoice(BaseFinanceModel):
         self.assign_invoice_number()
         return super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.invoice_number}-{self.restaurant.name}"
+
+
 
 class KOT(BaseFinanceModel):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
