@@ -91,7 +91,7 @@ class Invoice(BaseFinanceModel):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.invoice_number}-{self.restaurant.name}"
+        return f"{self.invoice_number}-{self.restaurant.name} - {self.finalized}"
 
 
 
@@ -110,3 +110,4 @@ class Order(BaseFinanceModel):
     quantity = models.IntegerField(default=1)
     size = models.CharField(max_length=16, choices=Size.choices, default=Size.FULL)
     cost = models.FloatField(default=0.0)
+    dish_description = models.CharField(max_length=100, null=True, blank=True)

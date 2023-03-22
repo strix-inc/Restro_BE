@@ -30,6 +30,9 @@ class Dish(BaseKitchenModel):
     unit = models.CharField(max_length=64, choices=Unit.choices, default=Unit.PLATE)
     dish_type = models.CharField(max_length=64, choices=DishType.choices, default=DishType.VEG)
 
+    class Meta:
+        unique_together = ("restaurant", "name", "category")
+
     def __str__(self) -> str:
         return f"{self.name} ({self.restaurant.name})"
 
