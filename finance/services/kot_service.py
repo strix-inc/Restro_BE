@@ -1,5 +1,6 @@
 from authentication.models import Restaurant
 from finance.models import KOT, Invoice, Order
+from kitchen.models.food import Dish
 
 
 class KOTService:
@@ -17,6 +18,7 @@ class KOTService:
                 invoice=kot.invoice,
                 quantity=item["quantity"],
                 size=item["size"],
+                dish_description=Dish.objects.get(id=item["id"]).name
             )
             for item in self.items
         ]
