@@ -1,3 +1,4 @@
+from datetime import datetime
 from distutils.util import strtobool
 from django.http import (
     JsonResponse,
@@ -91,7 +92,18 @@ class InvoiceView(BaseView):
         finalized = strtobool(request.query_params.get("finalized", "true"))
         invoices = Invoice.objects.filter(
             restaurant=restaurant, finalized=finalized
-        ).order_by("-created_at")
+        )
+        start_date = request.query_params.get("from")
+        if start_date:
+            start_date = datetime.strptime(start_date, "%d/%m/%Y")
+            invoices = invoices.filter(created_at__gte=start_date)
+
+        end_date = request.query_params.get("to")
+        if end_date:
+            end_date = datetime.strptime(end_date, "%d/%m/%Y")
+            invoices = invoices.filter(created_at__lte=end_date)
+
+        invoices = invoices.order_by("-created_at")
         serializer = InvoiceSerializer(invoices, many=True)
         return JsonResponse({"data": serializer.data})
 
