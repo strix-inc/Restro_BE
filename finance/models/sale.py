@@ -78,8 +78,15 @@ class Invoice(BaseFinanceModel):
 
     def assign_invoice_number(self):
         if self.finalized and not self.invoice_number:
-            self.invoice_number = Invoice.objects.filter(restaurant=self.restaurant, finalized=True).count() + 1
-            self.invoice_number_full = f"{self.restaurant.invoice_prefix}{self.invoice_number}"
+            self.invoice_number = (
+                Invoice.objects.filter(
+                    restaurant=self.restaurant, finalized=True
+                ).count()
+                + 1
+            )
+            self.invoice_number_full = (
+                f"{self.restaurant.invoice_prefix}{self.invoice_number}"
+            )
 
     def save(self, *args, **kwargs):
         self.calculate_gst()
@@ -92,7 +99,6 @@ class Invoice(BaseFinanceModel):
 
     def __str__(self):
         return f"{self.invoice_number}-{self.restaurant.name} - {self.finalized}"
-
 
 
 class KOT(BaseFinanceModel):
