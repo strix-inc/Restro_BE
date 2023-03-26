@@ -91,23 +91,39 @@ class InvoiceView(BaseView):
         top, bottom = sorted_dishes[-1][0], sorted_dishes[0][0]
         return top, bottom
 
+    def _get_one_invoice(self, invoice_id, restaurant):
+        try:
+            invoice = Invoice.objects.get(id=invoice_id, restaurant=restaurant)
+        except Invoice.DoesNotExist:
+            return HttpResponseNotFound("Invoice Does Not Exist")
+        else:
+            serializer = InvoiceSerializer(invoice)
+            return JsonResponse({"data": serializer.data})
+
     def get(self, request):
         restaurant = self.get_restaurant(request)
         invoice_id = request.query_params.get("id")
         if invoice_id:
-            try:
-                invoice = Invoice.objects.get(id=invoice_id, restaurant=restaurant)
-            except Invoice.DoesNotExist:
-                return HttpResponseNotFound("Invoice Does Not Exist")
-            else:
-                serializer = InvoiceSerializer(invoice)
-                return JsonResponse({"data": serializer.data})
+            return self._get_one_invoice(invoice_id, restaurant)
 
         finalized = strtobool(request.query_params.get("finalized", "true"))
-        invoices = Invoice.objects.filter(restaurant=restaurant, finalized=finalized)
-        start_date = request.query_params.get("from")
+        invoices = Invoice.objects.filter(
+            restaurant=restaurant, finalized=finalized, is_deleted=False
+        )
+
+        if not finalized:
+            # * Active invoices/tables
+            invoices = invoices.order_by("-created_at")
+            serializer = InvoiceSerializer(invoices, many=True)
+            return JsonResponse({"data": serializer.data})
+
+        start_date = request.query_params.get("from") or datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
         if start_date:
-            start_date = datetime.strptime(start_date, "%d/%m/%Y")
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, "%d/%m/%Y")
             invoices = invoices.filter(created_at__gte=start_date)
 
         end_date = request.query_params.get("to")
@@ -115,8 +131,17 @@ class InvoiceView(BaseView):
             end_date = datetime.strptime(end_date, "%d/%m/%Y")
             invoices = invoices.filter(created_at__lte=end_date)
 
+        payment_type = request.query_params.get("payment")
+        if payment_type:
+            invoices = invoices.filter(payment_type=payment_type)
+
+        platform = request.query_params.get("platform")
+        if platform:
+            invoices = invoices.filter(platform__name=platform)
+
         invoices = invoices.order_by("-created_at")
         serializer = InvoiceSerializer(invoices, many=True)
+
         max_sale = invoices.aggregate(Max("total"))["total__max"] or 0.0
         average_sale = invoices.aggregate(Avg("total"))["total__avg"] or 0.0
         (
@@ -128,7 +153,7 @@ class InvoiceView(BaseView):
                 "data": serializer.data,
                 "max_sale": max_sale,
                 "avg_sale": average_sale,
-                "top_selling_item": top_selling_item,
+                "highest_selling_item": top_selling_item,
                 "lowest_selling_item": lowest_selling_item,
             }
         )
@@ -166,9 +191,18 @@ class InvoiceView(BaseView):
     def delete(self, request):
         restaurant = self.get_restaurant(request)
         data = request.data
-        order_id = data["id"]
-        Invoice.objects.filter(id=order_id, restaurant=restaurant).delete()
-        return JsonResponse({"data": f"Invoice with ID {order_id} deleted"}, status=200)
+        invoice_id = data["id"]
+        # ! Hard Delete only if the invoice hasn't been finalized
+        Invoice.objects.filter(
+            id=invoice_id, restaurant=restaurant, finalized=False
+        ).delete()
+        Invoice.objects.filter(
+            id=invoice_id, restaurant=restaurant, finalized=True
+        ).update(is_deleted=True)
+
+        return JsonResponse(
+            {"data": f"Invoice with ID {invoice_id} deleted"}, status=200
+        )
 
 
 class OrderView(BaseView):
