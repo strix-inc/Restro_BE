@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import datetime
 from distutils.util import strtobool
 from django.http import (
@@ -5,6 +6,7 @@ from django.http import (
     HttpResponseBadRequest,
     HttpResponseNotFound,
 )
+from django.db.models import Max, Avg
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -77,6 +79,18 @@ class KOTView(BaseView):
 
 
 class InvoiceView(BaseView):
+    def _get_top_selling_and_lowest_selling_item(self, invoices):
+        top, bottom = "", ""
+        if not invoices:
+            return top, bottom
+
+        orders = Order.objects.filter(invoice__in=invoices)
+        dishes = orders.values_list("dish__name", flat=True)
+        counts = Counter(dishes)
+        sorted_dishes = sorted(counts.item(), key=lambda x: x[1])
+        top, bottom = sorted_dishes[-1], sorted_dishes[0]
+        return top, bottom
+
     def get(self, request):
         restaurant = self.get_restaurant(request)
         invoice_id = request.query_params.get("id")
@@ -90,9 +104,7 @@ class InvoiceView(BaseView):
                 return JsonResponse({"data": serializer.data})
 
         finalized = strtobool(request.query_params.get("finalized", "true"))
-        invoices = Invoice.objects.filter(
-            restaurant=restaurant, finalized=finalized
-        )
+        invoices = Invoice.objects.filter(restaurant=restaurant, finalized=finalized)
         start_date = request.query_params.get("from")
         if start_date:
             start_date = datetime.strptime(start_date, "%d/%m/%Y")
@@ -105,7 +117,21 @@ class InvoiceView(BaseView):
 
         invoices = invoices.order_by("-created_at")
         serializer = InvoiceSerializer(invoices, many=True)
-        return JsonResponse({"data": serializer.data})
+        max_sale = invoices.aggregate(Max("total"))["total__max"] or 0.0
+        average_sale = invoices.aggregate(Avg("total"))["total__avg"] or 0.0
+        (
+            top_selling_item,
+            lowest_selling_item,
+        ) = self._get_top_selling_and_lowest_selling_item(invoices)
+        return JsonResponse(
+            {
+                "data": serializer.data,
+                "max_sale": max_sale,
+                "avg_sale": average_sale,
+                "top_selling_item": top_selling_item,
+                "lowest_selling_item": lowest_selling_item,
+            }
+        )
 
     def put(self, request):
         """
