@@ -88,7 +88,7 @@ class InvoiceView(BaseView):
         dishes = orders.values_list("dish__name", flat=True)
         counts = Counter(dishes)
         sorted_dishes = sorted(counts.items(), key=lambda x: x[1])
-        top, bottom = sorted_dishes[-1], sorted_dishes[0]
+        top, bottom = sorted_dishes[-1][0], sorted_dishes[0][0]
         return top, bottom
 
     def get(self, request):
