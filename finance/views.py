@@ -85,7 +85,12 @@ class InvoiceView(BaseView):
             return top, bottom
 
         orders = Order.objects.filter(invoice__in=invoices)
+        if not orders:
+            return top, bottom
+
         dishes = orders.values_list("dish__name", flat=True)
+        if not dishes:
+            return top, bottom
         counts = Counter(dishes)
         sorted_dishes = sorted(counts.items(), key=lambda x: x[1])
         top, bottom = sorted_dishes[-1][0], sorted_dishes[0][0]
