@@ -73,8 +73,9 @@ class Invoice(BaseFinanceModel):
         return self.SGST_PERCENT if self.restaurant.gstin else 0.0
 
     def calculate_gst(self):
-        self.cgst = self.subtotal * self.cgst_percent
-        self.sgst = self.subtotal * self.sgst_percent
+        amt = self.subtotal - self.discount
+        self.cgst = amt * self.cgst_percent
+        self.sgst = amt * self.sgst_percent
 
     def assign_invoice_number(self):
         if self.finalized and not self.invoice_number:
