@@ -3,10 +3,10 @@ import requests
 
 
 class UPIService:
-    def __init__(self, upi_id: str, name: str) -> None:
+    def __init__(self, upi_id: str) -> None:
         self.upi_id = upi_id
 
-    def generate_upi_qr_code(self, amount: float, note: str, name):
+    def generate_upi_qr_code(self, amount: float, note: str, name: str):
         amount = f"{amount:.2f}"
         res = requests.get(
             "https://upiqr.in/api/qr",
