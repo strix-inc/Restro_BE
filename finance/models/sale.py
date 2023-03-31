@@ -91,7 +91,7 @@ class Invoice(BaseFinanceModel):
 
     def save(self, *args, **kwargs):
         self.calculate_gst()
-        self.total = round(self.calculate_total(), 2)
+        self.total = round(self.calculate_total())
         self.subtotal = round(self.subtotal, 2)
         self.cgst = round(self.cgst, 2)
         self.sgst = round(self.sgst, 2)
