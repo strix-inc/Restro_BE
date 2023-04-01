@@ -14,13 +14,14 @@ from rest_framework.permissions import IsAuthenticated
 from authentication.mixins import MemberAccessMixin
 from finance.models.sale import KOT, Invoice, Order
 from finance.services.invoice_service import InvoiceService
+from finance.services.upi_service import UPIService
 
 from .serializers import InvoiceSerializer, KOTSerializer
 from .services.kot_service import KOTService
 
 
 class BaseView(APIView, MemberAccessMixin):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, )
 
 
 class KOTView(BaseView):
@@ -103,7 +104,10 @@ class InvoiceView(BaseView):
             return HttpResponseNotFound("Invoice Does Not Exist")
         else:
             serializer = InvoiceSerializer(invoice)
-            return JsonResponse({"data": serializer.data})
+            upi_qr = None
+            if invoice.finalized and restaurant.upi_id:
+                upi_qr = UPIService(restaurant.upi_id).generate_upi_qr_code(invoice.total, note=f"Invoice Number - {invoice.invoice_number_full}", name=restaurant.name)
+            return JsonResponse({"data": serializer.data, "upi_qr": upi_qr})
 
     def get(self, request):
         restaurant = self.get_restaurant(request)
