@@ -32,6 +32,9 @@ class Dish(BaseKitchenModel):
 
     class Meta:
         unique_together = ("restaurant", "name", "category")
+        indexes = [
+            models.Index(fields=['restaurant', 'is_deleted']),
+        ]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.restaurant.name})"

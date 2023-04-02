@@ -29,6 +29,8 @@ class Invoice(BaseFinanceModel):
     discount = models.FloatField(default=0.0)
     cgst = models.FloatField(default=0.0)
     sgst = models.FloatField(default=0.0)
+    net_amount = models.FloatField(default=0.0)
+    delivery_charge = models.FloatField(default=0.0)
     total = models.FloatField(default=0.0)
     payment_type = models.CharField(
         max_length=32, choices=PaymentType.choices, default=PaymentType.CASH
@@ -61,8 +63,11 @@ class Invoice(BaseFinanceModel):
             else self.PaymentStatus.PENDING
         )
 
+    def calculate_net_amount(self):
+        self.net_amount = self.subtotal - self.discount
+
     def calculate_total(self):
-        return (self.subtotal - self.discount) + self.cgst + self.sgst
+        return self.net_amount + self.cgst + self.sgst + self.delivery_charge
 
     @property
     def cgst_percent(self):
@@ -73,7 +78,7 @@ class Invoice(BaseFinanceModel):
         return self.SGST_PERCENT if self.restaurant.gstin else 0.0
 
     def calculate_gst(self):
-        amt = self.subtotal - self.discount
+        amt = self.net_amount
         self.cgst = amt * self.cgst_percent
         self.sgst = amt * self.sgst_percent
 
@@ -90,9 +95,12 @@ class Invoice(BaseFinanceModel):
             )
 
     def save(self, *args, **kwargs):
+        self.calculate_net_amount()
         self.calculate_gst()
         self.total = round(self.calculate_total())
         self.subtotal = round(self.subtotal, 2)
+        self.net_amount = round(self.net_amount, 2)
+        self.delivery_charge = round(self.delivery_charge, 2)
         self.cgst = round(self.cgst, 2)
         self.sgst = round(self.sgst, 2)
         self.assign_invoice_number()
