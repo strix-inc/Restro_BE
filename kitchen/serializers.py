@@ -17,7 +17,7 @@ class DishSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name")
 
     def dish_rates(self, dish):
-        rates = DishRate.objects.filter(dish=dish, is_deleted=False)
+        rates = DishRate.objects.select_related("dish").filter(dish=dish)
         serializer = DishRateSerializer(rates, many=True)
         return serializer.data
 
