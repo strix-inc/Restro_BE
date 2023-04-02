@@ -28,12 +28,14 @@ class Dish(BaseKitchenModel):
     name = models.CharField(max_length=32)
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING)
     unit = models.CharField(max_length=64, choices=Unit.choices, default=Unit.PLATE)
-    dish_type = models.CharField(max_length=64, choices=DishType.choices, default=DishType.VEG)
+    dish_type = models.CharField(
+        max_length=64, choices=DishType.choices, default=DishType.VEG
+    )
 
     class Meta:
         unique_together = ("restaurant", "name", "category")
         indexes = [
-            models.Index(fields=['restaurant', 'is_deleted']),
+            models.Index(fields=["restaurant", "is_deleted"]),
         ]
 
     def __str__(self) -> str:
@@ -48,6 +50,9 @@ class DishRate(BaseKitchenModel):
 
     class Meta:
         unique_together = ("restaurant", "dish", "platform")
+        indexes = [
+            models.Index(fields=["dish", "is_deleted"]),
+        ]
 
     def __str__(self) -> str:
         return f"{self.dish.name} - {self.platform.name} ({self.restaurant.name})"
