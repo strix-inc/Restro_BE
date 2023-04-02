@@ -16,6 +16,7 @@ class InvoiceService:
         orders: Optional[list] = None,
         subtotal: float = 0.0,
         discount: float = 0.0,
+        delivery_charge: float = 0.0
     ) -> None:
         if orders is None:
             orders = []
@@ -24,6 +25,7 @@ class InvoiceService:
         self.orders = orders
         self.subtotal = subtotal
         self.discount = discount
+        self.delivery_charge = delivery_charge
         self.platform = Platform.objects.get(id=platform_id)
 
     def _update_order(self, order_id: Union[UUID, str], order_details: dict) -> dict:
@@ -58,6 +60,7 @@ class InvoiceService:
         self.invoice.platform = self.platform
         self.invoice.subtotal = self.subtotal
         self.invoice.discount = self.discount
+        self.invoice.delivery_charge = self.delivery_charge
         if not self.invoice.finalized:
             self.invoice.finalized = True
         self.invoice.save()
