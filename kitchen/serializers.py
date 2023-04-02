@@ -14,6 +14,7 @@ class DishRateSerializer(serializers.ModelSerializer):
 
 class DishSerializer(serializers.ModelSerializer):
     rates = DishRateSerializer(read_only=True, source="dishrate_set", many=True)
+    rates = DishRateSerializer(read_only=True, many=True)
     category_name = serializers.CharField(source="category.name")
 
     class Meta:
