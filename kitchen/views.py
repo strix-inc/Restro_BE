@@ -26,7 +26,7 @@ class DishView(APIView, MemberAccessMixin):
                 dish_serializer = DishSerializer(dish)
                 return JsonResponse({"data": dish_serializer.data})
 
-        dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False).prefetch_related("category")
+        dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False).prefetch_related("category", "dishrate_set")
         dish_serializer = DishSerializer(dishes, many=True)
         return JsonResponse({"data": dish_serializer.data})
 
