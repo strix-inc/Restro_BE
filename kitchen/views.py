@@ -37,20 +37,21 @@ class DishView(APIView, MemberAccessMixin):
                 dish_serializer = DishSerializer(dish)
                 return JsonResponse({"data": dish_serializer.data})
 
-        dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False)
-        dish_rates = DishRate.objects.filter(dish__in=dishes, is_deleted=False)
+        dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False).prefetch_related("category")
+        dish_rates = DishRate.objects.filter(dish__in=dishes, is_deleted=False).prefetch_related("dish", "platform")
+        dish_rates_data = DishRateSerializer(dish_rates, many=True).data
+        dishes_data = DishSerializer(dishes, many=True).data
         dish_rate_map = {}
-        for dish_rate in dish_rates:
-            dish_id = str(dish_rate.dish_id)
+        for dish_rate in dish_rates_data:
+            dish_id = str(dish_rate["dish"])
             rate_map = dish_rate_map.get(dish_id, [])
             rate_map.append(dish_rate)
-            dish_rate_map[str(dish_rate.dish.id)] = rate_map
-
-        dish_serializer = DishSerializer(dishes, many=True)
-        dishes_data = dish_serializer.data
+            dish_rate_map[dish_id] = rate_map
         for dish_data in dishes_data:
-            id_ = dish_data["id"]
-            dish_data["rates"] = DishRateSerializer(dish_rate_map[id_], many=True).data
+            id_ = str(dish_data["id"])
+            if id_ not in dish_rate_map:
+                continue
+            dish_data["rates"] = dish_rate_map[id_]
 
         return JsonResponse({"data": dishes_data})
 
