@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from authentication.mixins import MemberAccessMixin
 from kitchen.models.platform import Platform
-from kitchen.serializers import DishSerializer, PlatformSerializer, CategorySerializer
+from kitchen.serializers import DishRateSerializer, DishSerializer, PlatformSerializer, CategorySerializer
 from kitchen.services.dish_service import DishService
 from .models.food import Dish, DishRate, Category
 
@@ -38,8 +38,21 @@ class DishView(APIView, MemberAccessMixin):
                 return JsonResponse({"data": dish_serializer.data})
 
         dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False)
+        dish_rates = DishRate.objects.filter(dish__in=dishes, is_deleted=False)
+        dish_rate_map = {}
+        for dish_rate in dish_rates:
+            dish_id = str(dish_rate.dish_id)
+            rate_map = dish_rate_map.get(dish_id, [])
+            rate_map.append(dish_rate)
+            dish_rate_map[str(dish_rate.dish.id)] = rate_map
+
         dish_serializer = DishSerializer(dishes, many=True)
-        return JsonResponse({"data": dish_serializer.data})
+        dishes_data = dish_serializer.data
+        for dish_data in dishes_data:
+            id_ = dish_data["id"]
+            dish_data["rates"] = DishRateSerializer(dish_rate_map[id_], many=True).data
+
+        return JsonResponse({"data": dishes_data})
 
     def _get_dish_type(self, dish_type: str) -> Dish.DishType:
         return (

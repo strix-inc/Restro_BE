@@ -13,7 +13,6 @@ class DishRateSerializer(serializers.ModelSerializer):
 
 
 class DishSerializer(serializers.ModelSerializer):
-    rates = serializers.SerializerMethodField("dish_rates")
     category_name = serializers.CharField(source="category.name")
 
     def dish_rates(self, dish):
