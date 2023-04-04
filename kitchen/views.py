@@ -31,11 +31,13 @@ class DishView(APIView, MemberAccessMixin):
         if dish_id:
             try:
                 dish = Dish.objects.get(id=dish_id, restaurant=restaurant, is_deleted=False)
+                dish_rates = DishRate.objects.filter(dish=dish, is_deleted=False)
             except Dish.DoesNotExist:
                 return HttpResponseNotFound("No Dish Found")
             else:
-                dish_serializer = DishSerializer(dish)
-                return JsonResponse({"data": dish_serializer.data})
+                dish_data = DishSerializer(dish).data
+                dish_data["rates"] = DishRateSerializer(dish_rates, many=True).data
+                return JsonResponse({"data": dish_data})
 
         dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False).prefetch_related("category")
         dish_rates = DishRate.objects.filter(dish__in=dishes, is_deleted=False).prefetch_related("dish", "platform")
