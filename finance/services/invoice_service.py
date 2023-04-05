@@ -5,6 +5,7 @@ from authentication.models.restaurant import Restaurant
 from finance.models.sale import Invoice, Order
 from kitchen.models.food import DishRate
 from kitchen.models.platform import Platform
+from kitchen.models.staff import Staff
 
 
 class InvoiceService:
@@ -16,7 +17,8 @@ class InvoiceService:
         orders: Optional[list] = None,
         subtotal: float = 0.0,
         discount: float = 0.0,
-        delivery_charge: float = 0.0
+        delivery_charge: float = 0.0,
+        staff_id: Union[str, UUID] = None,
     ) -> None:
         if orders is None:
             orders = []
@@ -27,6 +29,7 @@ class InvoiceService:
         self.discount = discount
         self.delivery_charge = delivery_charge
         self.platform = Platform.objects.get(id=platform_id)
+        self.staff = Staff.objects.get(id=staff_id) if staff_id else None
 
     def _update_order(self, order_id: Union[UUID, str], order_details: dict) -> dict:
         quantity = order_details["quantity"]
@@ -61,6 +64,7 @@ class InvoiceService:
         self.invoice.subtotal = self.subtotal
         self.invoice.discount = self.discount
         self.invoice.delivery_charge = self.delivery_charge
+        self.invoice.staff = self.staff
         if not self.invoice.finalized:
             self.invoice.finalized = True
         self.invoice.save()

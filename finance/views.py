@@ -181,7 +181,8 @@ class InvoiceView(BaseView):
                     "quantity": 2,
                     "size": "half",
                 }
-            ]
+            ],
+            "staff": "acnaslkcknsa",
         }
         """
         restaurant = self.get_restaurant(request)
@@ -193,7 +194,8 @@ class InvoiceView(BaseView):
             orders=data["orders"],
             subtotal=data["subtotal"],
             discount=data["discount"],
-            delivery_charge=data["delivery_charge"]
+            delivery_charge=data["delivery_charge"],
+            staff_id=data.get("staff_id"),
         ).update_invoice()
         serializer = InvoiceSerializer(invoice)
         return JsonResponse({"data": serializer.data}, status=201)
