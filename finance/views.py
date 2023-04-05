@@ -195,7 +195,7 @@ class InvoiceView(BaseView):
             subtotal=data["subtotal"],
             discount=data["discount"],
             delivery_charge=data["delivery_charge"],
-            staff_id=data.get("staff_id"),
+            staff_id=data.get("staff"),
         ).update_invoice()
         serializer = InvoiceSerializer(invoice)
         return JsonResponse({"data": serializer.data}, status=201)

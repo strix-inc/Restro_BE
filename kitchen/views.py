@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from datetime import datetime
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponse
 
 from rest_framework.views import APIView
@@ -6,7 +7,14 @@ from rest_framework.permissions import IsAuthenticated
 
 from authentication.mixins import MemberAccessMixin
 from kitchen.models.platform import Platform
-from kitchen.serializers import DishRateSerializer, DishSerializer, PlatformSerializer, CategorySerializer
+from kitchen.models.staff import Staff
+from kitchen.serializers import (
+    DishRateSerializer,
+    DishSerializer,
+    PlatformSerializer,
+    CategorySerializer,
+    StaffSerializer,
+)
 from kitchen.services.dish_service import DishService
 from .models.food import Dish, DishRate, Category
 
@@ -30,7 +38,9 @@ class DishView(APIView, MemberAccessMixin):
 
         if dish_id:
             try:
-                dish = Dish.objects.get(id=dish_id, restaurant=restaurant, is_deleted=False)
+                dish = Dish.objects.get(
+                    id=dish_id, restaurant=restaurant, is_deleted=False
+                )
                 dish_rates = DishRate.objects.filter(dish=dish, is_deleted=False)
             except Dish.DoesNotExist:
                 return HttpResponseNotFound("No Dish Found")
@@ -39,8 +49,12 @@ class DishView(APIView, MemberAccessMixin):
                 dish_data["rates"] = DishRateSerializer(dish_rates, many=True).data
                 return JsonResponse({"data": dish_data})
 
-        dishes = Dish.objects.filter(restaurant=restaurant, is_deleted=False).prefetch_related("category")
-        dish_rates = DishRate.objects.filter(dish__in=dishes, is_deleted=False).prefetch_related("dish", "platform")
+        dishes = Dish.objects.filter(
+            restaurant=restaurant, is_deleted=False
+        ).prefetch_related("category")
+        dish_rates = DishRate.objects.filter(
+            dish__in=dishes, is_deleted=False
+        ).prefetch_related("dish", "platform")
         dish_rates_data = DishRateSerializer(dish_rates, many=True).data
         dishes_data = DishSerializer(dishes, many=True).data
         dish_rate_map = {}
@@ -215,7 +229,7 @@ class CategoryView(APIView, MemberAccessMixin):
         try:
             category = Category.objects.get(id=category_id, restaurant=restaurant)
         except Category.DoesNotExist:
-            return HttpResponseNotFound("Platform Not Found")
+            return HttpResponseNotFound("Category Not Found")
         else:
             category.name = name
             category.save()
@@ -229,7 +243,83 @@ class CategoryView(APIView, MemberAccessMixin):
         try:
             category = Category.objects.get(id=category_id, restaurant=restaurant)
         except Category.DoesNotExist:
-            return HttpResponseNotFound("Platform Not Found")
+            return HttpResponseNotFound("Category Not Found")
         else:
             category.delete()
             return HttpResponse("Category Deleted")
+
+
+class StaffView(APIView, MemberAccessMixin):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        staff_id = request.query_params.get("id")
+        restaurant = self.get_restaurant(request)
+
+        if staff_id:
+            try:
+                staff = Staff.objects.get(id=staff_id, restaurant=restaurant)
+            except Staff.DoesNotExist:
+                return HttpResponseNotFound("No Staff Found")
+            else:
+                serializer = StaffSerializer(staff)
+                return JsonResponse({"data": serializer.data})
+
+        staffs = Staff.objects.filter(restaurant=restaurant).prefetch_related(
+            "restaurant"
+        )
+        serializer = StaffSerializer(staffs, many=True)
+        return JsonResponse({"data": serializer.data})
+
+    def post(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        name = data["name"]
+        contact = data.get("contact")
+        address = data.get("address")
+        joining_date = data.get("date_of_joining")
+        if joining_date:
+            joining_date = datetime.strptime(joining_date, "%d/%m/%Y")
+        staff, _ = Staff.objects.get_or_create(
+            name=name.strip().upper(), restaurant=restaurant
+        )
+        staff.contact = contact
+        return self.save_staff_info(address, staff, joining_date, 201)
+
+    def put(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        staff_id = data["id"]
+        name = data["name"]
+        contact = data.get("contact")
+        address = data.get("address")
+        joining_date = data.get("joining_date")
+        if joining_date:
+            joining_date = datetime.strptime(joining_date, "%d/%m/%Y")
+        try:
+            staff = Staff.objects.get(id=staff_id, restaurant=restaurant)
+        except Staff.DoesNotExist:
+            return HttpResponseNotFound("Staff Not Found")
+        else:
+            staff.name = name
+            staff.contact = contact
+            return self.save_staff_info(address, staff, joining_date, 200)
+
+    def save_staff_info(self, address, staff, joining_date, status):
+        staff.address = address
+        staff.date_of_joining = joining_date
+        staff.save()
+        serializer = StaffSerializer(staff)
+        return JsonResponse({"data": serializer.data}, status=status)
+
+    def delete(self, request):
+        restaurant = self.get_restaurant(request)
+        data = request.data
+        staff_id = data["id"]
+        try:
+            staff = Staff.objects.get(id=staff_id, restaurant=restaurant)
+        except Staff.DoesNotExist:
+            return HttpResponseNotFound("Staff Not Found")
+        else:
+            staff.delete()
+            return HttpResponse("Staff Deleted")
