@@ -19,9 +19,11 @@ from kitchen.services.dish_service import DishService
 from .models.food import Dish, DishRate, Category
 
 
-class DishView(APIView, MemberAccessMixin):
+class BaseView(APIView, MemberAccessMixin):
     permission_classes = (IsAuthenticated,)
 
+
+class DishView(BaseView):
     def _group_into_categories(self, dishes: list) -> dict:
         category_map = OrderedDict()
         for dish in dishes:
@@ -133,9 +135,7 @@ class DishView(APIView, MemberAccessMixin):
             return HttpResponse("Dish Deleted")
 
 
-class PlatformView(APIView, MemberAccessMixin):
-    permission_classes = (IsAuthenticated,)
-
+class PlatformView(BaseView):
     def get(self, request):
         platform_id = request.query_params.get("id")
         restaurant = self.get_restaurant(request)
@@ -191,9 +191,7 @@ class PlatformView(APIView, MemberAccessMixin):
             return HttpResponse("Platform Deleted")
 
 
-class CategoryView(APIView, MemberAccessMixin):
-    permission_classes = (IsAuthenticated,)
-
+class CategoryView(BaseView):
     def get(self, request):
         category_id = request.query_params.get("id")
         restaurant = self.get_restaurant(request)
@@ -249,9 +247,7 @@ class CategoryView(APIView, MemberAccessMixin):
             return HttpResponse("Category Deleted")
 
 
-class StaffView(APIView, MemberAccessMixin):
-    permission_classes = (IsAuthenticated,)
-
+class StaffView(BaseView):
     def get(self, request):
         staff_id = request.query_params.get("id")
         restaurant = self.get_restaurant(request)
