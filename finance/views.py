@@ -3,7 +3,7 @@ from collections import Counter
 from datetime import datetime
 from distutils.util import strtobool
 from django.http import (
-    FileResponse,
+    HttpResponse,
     JsonResponse,
     HttpResponseBadRequest,
     HttpResponseNotFound,
@@ -173,8 +173,7 @@ class InvoiceView(BaseView):
                 ]
             )
         buffer.seek(0)
-        response = FileResponse(buffer)
-        response["Content-Type"] = "text/csv"
+        response = HttpResponse(buffer, content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=invoice_history.csv"
         return response
 
