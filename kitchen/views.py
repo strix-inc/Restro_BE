@@ -274,8 +274,6 @@ class StaffView(BaseView):
         contact = data.get("contact")
         address = data.get("address")
         joining_date = data.get("date_of_joining")
-        if joining_date:
-            joining_date = datetime.strptime(joining_date, "%d/%m/%Y")
         staff, _ = Staff.objects.get_or_create(
             name=name.strip().upper(), restaurant=restaurant
         )
@@ -290,8 +288,6 @@ class StaffView(BaseView):
         contact = data.get("contact")
         address = data.get("address")
         joining_date = data.get("joining_date")
-        if joining_date:
-            joining_date = datetime.strptime(joining_date, "%d/%m/%Y")
         try:
             staff = Staff.objects.get(id=staff_id, restaurant=restaurant)
         except Staff.DoesNotExist:
@@ -302,6 +298,8 @@ class StaffView(BaseView):
             return self.save_staff_info(address, staff, joining_date, 200)
 
     def save_staff_info(self, address, staff, joining_date, status):
+        if joining_date:
+            joining_date = datetime.strptime(joining_date, "%d/%m/%Y").date
         staff.address = address
         staff.date_of_joining = joining_date
         staff.save()
