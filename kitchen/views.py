@@ -299,7 +299,7 @@ class StaffView(BaseView):
 
     def save_staff_info(self, address, staff, joining_date, status):
         if joining_date:
-            joining_date = datetime.strptime(joining_date, "%d/%m/%Y").date
+            joining_date = datetime.strptime(joining_date, "%d/%m/%Y").date()
         staff.address = address
         staff.date_of_joining = joining_date
         staff.save()
