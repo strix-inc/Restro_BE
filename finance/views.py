@@ -1,12 +1,16 @@
+import csv
 from collections import Counter
 from datetime import datetime
 from distutils.util import strtobool
 from django.http import (
+    HttpResponse,
     JsonResponse,
     HttpResponseBadRequest,
     HttpResponseNotFound,
 )
 from django.db.models import Max, Avg
+
+from io import StringIO
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +25,7 @@ from .services.kot_service import KOTService
 
 
 class BaseView(APIView, MemberAccessMixin):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
 
 class KOTView(BaseView):
@@ -106,26 +110,14 @@ class InvoiceView(BaseView):
             serializer = InvoiceSerializer(invoice)
             upi_qr = None
             if invoice.finalized and restaurant.upi_id:
-                upi_qr = UPIService(restaurant.upi_id).generate_upi_qr_code(invoice.total, note=f"Invoice Number - {invoice.invoice_number_full}", name=restaurant.name)
+                upi_qr = UPIService(restaurant.upi_id).generate_upi_qr_code(
+                    invoice.total,
+                    note=f"Invoice Number - {invoice.invoice_number_full}",
+                    name=restaurant.name,
+                )
             return JsonResponse({"data": serializer.data, "upi_qr": upi_qr})
 
-    def get(self, request):
-        restaurant = self.get_restaurant(request)
-        invoice_id = request.query_params.get("id")
-        if invoice_id:
-            return self._get_one_invoice(invoice_id, restaurant)
-
-        finalized = strtobool(request.query_params.get("finalized", "true"))
-        invoices = Invoice.objects.filter(
-            restaurant=restaurant, finalized=finalized, is_deleted=False
-        )
-
-        if not finalized:
-            # * Active invoices/tables
-            invoices = invoices.order_by("-created_at")
-            serializer = InvoiceSerializer(invoices, many=True)
-            return JsonResponse({"data": serializer.data})
-
+    def _filter_invoices(self, request, invoices):
         start_date = request.query_params.get("from") or datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -147,6 +139,66 @@ class InvoiceView(BaseView):
         platform = request.query_params.get("platform")
         if platform:
             invoices = invoices.filter(platform__name=platform)
+
+        return invoices
+
+    def _generate_csv_report(self, invoices):
+        invoices = invoices.order_by("created_at")
+        buffer = StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(
+            [
+                "INVOICE SERIAL",
+                "INVOICE NUMBER",
+                "SUBTOTAL",
+                "DISCOUNT",
+                "TAXABLE AMOUNT(NET)",
+                "CGST",
+                "SGST",
+                "DELIVERY CHARGE",
+                "TOTAL",
+            ]
+        )
+        for invoice in invoices:
+            writer.writerow(
+                [
+                    invoice.invoice_number,
+                    invoice.invoice_number_full,
+                    invoice.subtotal,
+                    invoice.discount,
+                    invoice.net_amount,
+                    invoice.cgst,
+                    invoice.sgst,
+                    invoice.delivery_charge,
+                    invoice.total,
+                ]
+            )
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type="text/csv")
+        response["Content-Disposition"] = "attachment; filename=invoice_history.csv"
+        return response
+
+    def get(self, request):
+        restaurant = self.get_restaurant(request)
+        invoice_id = request.query_params.get("id")
+        if invoice_id:
+            return self._get_one_invoice(invoice_id, restaurant)
+
+        finalized = strtobool(request.query_params.get("finalized", "true"))
+        invoices = Invoice.objects.filter(
+            restaurant=restaurant, finalized=finalized, is_deleted=False
+        )
+
+        if not finalized:
+            # * Active invoices/tables
+            invoices = invoices.order_by("-created_at")
+            serializer = InvoiceSerializer(invoices, many=True)
+            return JsonResponse({"data": serializer.data})
+
+        invoices = self._filter_invoices(request, invoices)
+        download = strtobool(request.query_params.get("download", "false"))
+        if download:
+            return self._generate_csv_report(invoices)
 
         invoices = invoices.order_by("-created_at")
         serializer = InvoiceSerializer(invoices, many=True)
@@ -181,7 +233,8 @@ class InvoiceView(BaseView):
                     "quantity": 2,
                     "size": "half",
                 }
-            ]
+            ],
+            "staff": "acnaslkcknsa",
         }
         """
         restaurant = self.get_restaurant(request)
@@ -193,7 +246,8 @@ class InvoiceView(BaseView):
             orders=data["orders"],
             subtotal=data["subtotal"],
             discount=data["discount"],
-            delivery_charge=data["delivery_charge"]
+            delivery_charge=data["delivery_charge"],
+            staff_id=data.get("staff"),
         ).update_invoice()
         serializer = InvoiceSerializer(invoice)
         return JsonResponse({"data": serializer.data}, status=201)
