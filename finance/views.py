@@ -143,6 +143,7 @@ class InvoiceView(BaseView):
         return invoices
 
     def _generate_csv_report(self, invoices):
+        invoices = invoices.order_by("created_at")
         buffer = StringIO()
         writer = csv.writer(buffer)
         writer.writerow(
@@ -195,11 +196,11 @@ class InvoiceView(BaseView):
             return JsonResponse({"data": serializer.data})
 
         invoices = self._filter_invoices(request, invoices)
-        invoices = invoices.order_by("-created_at")
         download = strtobool(request.query_params.get("download", "false"))
         if download:
             return self._generate_csv_report(invoices)
 
+        invoices = invoices.order_by("-created_at")
         serializer = InvoiceSerializer(invoices, many=True)
 
         max_sale = invoices.aggregate(Max("total"))["total__max"] or 0.0
