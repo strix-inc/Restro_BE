@@ -28,7 +28,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(serializers.ModelSerializer):
     orders = serializers.SerializerMethodField("invoice_orders")
-    staff_name = serializers.CharField(source="staff.name")
+    staff_name = serializers.CharField(source="staff.name", allow_blank=True, allow_null=True)
 
     def invoice_orders(self, invoice):
         orders = Order.objects.filter(invoice=invoice).prefetch_related("dish")
