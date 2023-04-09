@@ -205,7 +205,7 @@ class CategoryView(BaseView):
                 serializer = CategorySerializer(category)
                 return JsonResponse({"data": serializer.data})
 
-        categories = Category.objects.filter(restaurant=restaurant)
+        categories = Category.objects.filter(restaurant=restaurant, is_deleted=False)
         serializer = CategorySerializer(categories, many=True)
         return JsonResponse({"data": serializer.data})
 
@@ -238,13 +238,8 @@ class CategoryView(BaseView):
         restaurant = self.get_restaurant(request)
         data = request.data
         category_id = data["id"]
-        try:
-            category = Category.objects.get(id=category_id, restaurant=restaurant)
-        except Category.DoesNotExist:
-            return HttpResponseNotFound("Category Not Found")
-        else:
-            category.delete()
-            return HttpResponse("Category Deleted")
+        Category.objects.filter(id=category_id, restaurant=restaurant).update(is_deleted=True)
+        return HttpResponse("Category Deleted")
 
 
 class StaffView(BaseView):
@@ -261,7 +256,7 @@ class StaffView(BaseView):
                 serializer = StaffSerializer(staff)
                 return JsonResponse({"data": serializer.data})
 
-        staffs = Staff.objects.filter(restaurant=restaurant).prefetch_related(
+        staffs = Staff.objects.filter(restaurant=restaurant, is_deleted=False).prefetch_related(
             "restaurant"
         )
         serializer = StaffSerializer(staffs, many=True)
@@ -310,10 +305,5 @@ class StaffView(BaseView):
         restaurant = self.get_restaurant(request)
         data = request.data
         staff_id = data["id"]
-        try:
-            staff = Staff.objects.get(id=staff_id, restaurant=restaurant)
-        except Staff.DoesNotExist:
-            return HttpResponseNotFound("Staff Not Found")
-        else:
-            staff.delete()
-            return HttpResponse("Staff Deleted")
+        Staff.objects.filter(id=staff_id, restaurant=restaurant).update(is_deleted=True)
+        return HttpResponse("Staff Deleted")
