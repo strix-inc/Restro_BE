@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from authentication.mixins import MemberAccessMixin
 from finance.models.sale import KOT, Invoice, Order
+from finance.services.customer_service import CustomerService
 from finance.services.invoice_service import InvoiceService
 from finance.services.upi_service import UPIService
 
@@ -235,10 +236,23 @@ class InvoiceView(BaseView):
                 }
             ],
             "staff": "acnaslkcknsa",
+            "customer": {
+                "contact": "123",
+                "name": "Aquib",
+                "gstin": "ACX"
+            }
         }
         """
         restaurant = self.get_restaurant(request)
         data = request.data
+        customer_data, customer = request.get("customer"), None
+        if customer_data:
+            contact = customer.get("contact")
+            name = customer.get("name")
+            gstin = customer.get("gstin")
+            if contact:
+                customer = CustomerService(contact=contact, restaurant=restaurant, name=name, gstin=gstin).create_or_update_customer()
+
         invoice = InvoiceService(
             invoice_id=data["id"],
             platform_id=data["platform"],
@@ -248,6 +262,7 @@ class InvoiceView(BaseView):
             discount=data["discount"],
             delivery_charge=data["delivery_charge"],
             staff_id=data.get("staff"),
+            customer=customer,
         ).update_invoice()
         serializer = InvoiceSerializer(invoice)
         return JsonResponse({"data": serializer.data}, status=201)

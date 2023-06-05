@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import KOT, Invoice, Order
+from .models import KOT, Invoice, Order, Customer
 
 
 class KOTSerializer(serializers.ModelSerializer):
@@ -37,4 +37,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Invoice
+        fields = "__all__"
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
         fields = "__all__"

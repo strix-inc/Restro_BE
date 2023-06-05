@@ -7,8 +7,20 @@ from .base import BaseFinanceModel
 
 
 class Customer(BaseFinanceModel):
-    contact = models.CharField(max_length=16, unique=True)
+    contact = models.CharField(max_length=16)
     name = models.CharField(max_length=64, null=True, blank=True)
+    gstin = models.CharField(max_length=64, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper() if self.name else ""
+        self.contact = self.contact.strip()
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        unique_together = ("restaurant", "contact")
+
+    def __str__(self) -> str:
+        return f"{self.contact} - {self.name} ({self.restaurant.name})"
 
 
 class Invoice(BaseFinanceModel):

@@ -2,7 +2,7 @@ from typing import Optional, Union
 from uuid import UUID
 from authentication.models.restaurant import Restaurant
 
-from finance.models.sale import Invoice, Order
+from finance.models.sale import Invoice, Order, Customer
 from kitchen.models.food import DishRate
 from kitchen.models.platform import Platform
 from kitchen.models.staff import Staff
@@ -19,6 +19,7 @@ class InvoiceService:
         discount: float = 0.0,
         delivery_charge: float = 0.0,
         staff_id: Union[str, UUID] = None,
+        customer: Optional[Customer] = None,
     ) -> None:
         if orders is None:
             orders = []
@@ -30,6 +31,13 @@ class InvoiceService:
         self.delivery_charge = delivery_charge
         self.platform = Platform.objects.get(id=platform_id)
         self.staff = Staff.objects.get(id=staff_id) if staff_id else None
+        self.customer = customer
+
+    def update_customer(self, customer_phone, customer_name):
+        customer = Customer.objects.get_or_create(contact=customer_phone.strip())
+        customer.name = customer_name
+        customer.save()
+        return customer
 
     def _update_order(self, order_id: Union[UUID, str], order_details: dict) -> dict:
         quantity = order_details["quantity"]
@@ -65,6 +73,7 @@ class InvoiceService:
         self.invoice.discount = self.discount
         self.invoice.delivery_charge = self.delivery_charge
         self.invoice.staff = self.staff
+        self.invoice.customer = self.customer
         if not self.invoice.finalized:
             self.invoice.finalized = True
         self.invoice.save()
